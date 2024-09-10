@@ -16,6 +16,11 @@ jobs:
         repository: ${{ github.repository }}
         token: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Configure Git user
+      run: |
+        git config --local user.email "github-actions@example.com"
+        git config --local user.name "GitHub Actions Bot"
+
     - name: Clean up any old configurations
       run: |
         git remote remove upstream || true  # Видаляємо upstream, якщо він існує
