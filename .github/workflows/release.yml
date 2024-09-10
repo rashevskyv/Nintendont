@@ -30,9 +30,9 @@ jobs:
       run: |
         mkdir -p apps/Nintendont/loader
         mkdir -p apps/Nintendont/nintendont
-        cp loader/loader.dol apps/Nintendont/loader/
-        cp nintendont/meta.xml apps/Nintendont/nintendont/
-        cp nintendont/icon.png apps/Nintendont/nintendont/
+        cp loader/loader.dol apps/Nintendont/
+        cp nintendont/meta.xml apps/Nintendont/
+        cp nintendont/icon.png apps/Nintendont/
 
     - name: Archive folder into nintendont.zip
       run: zip -r nintendont.zip apps/
