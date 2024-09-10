@@ -56,10 +56,19 @@ jobs:
         zip -r nintendont.zip apps/
 
     - name: Create Release
+      id: create_release
       uses: actions/create-release@v1
       with:
+        token: ${{ secrets.GITHUB_TOKEN }}
         tag_name: 'nintendont-release-${{ github.run_id }}'
         release_name: 'Nintendont Release'
         draft: false
         prerelease: false
-        files: nintendont.zip
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: nintendont.zip
+        asset_name: nintendont.zip
+        asset_content_type: application/zip
