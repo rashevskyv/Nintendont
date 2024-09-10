@@ -1,49 +1,52 @@
-name: Auto Release with Nintendont Files
+name: Sync Fork, Copy Files and Create Release
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'  # Запуск кожен день опівночі
 
 jobs:
-  create_release:
+  sync-fork:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout this repo
-        uses: actions/checkout@v2
-        
-      - name: Checkout another repo (Nintendont)
-        uses: actions/checkout@v2
-        with:
-          repository: another-user/nintendont-repo
-          token: ${{ secrets.GITHUB_TOKEN }}
-          path: nintendont-repo
+    - name: Checkout Forked Repository
+      uses: actions/checkout@v2
+      with:
+        repository: ${{ github.repository }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Add original repo as remote
+      run: |
+        git remote add upstream https://github.com/FIX94/Nintendont.git
+        git fetch upstream
+        git checkout main
+        git merge upstream/main
+    
+    - name: Copy loader.dol
+      run: |
+        mkdir -p apps/Nintendont/loader
+        cp loader/loader.dol apps/Nintendont/loader/
+    
+    - name: Copy meta.xml
+      run: |
+        mkdir -p apps/Nintendont/nintendont
+        cp nintendont/meta.xml apps/Nintendont/nintendont/
+    
+    - name: Copy icon.png
+      run: |
+        mkdir -p apps/Nintendont/nintendont
+        cp nintendont/icon.png apps/Nintendont/nintendont/
 
-      - name: Create apps/Nintendont directory
-        run: |
-          mkdir -p apps/Nintendont
-          cp nintendont-repo/loader/loader.dol apps/Nintendont/
-          cp nintendont-repo/nintendont/meta.xml apps/Nintendont/
-          cp nintendont-repo/nintendont/icon.png apps/Nintendont/
+    - name: Archive folder into nintendont.zip
+      run: |
+        zip -r nintendont.zip apps/
 
-      - name: Archive the apps directory
-        run: |
-          zip -r nintendont.zip apps/
-
-      - name: Upload artifact (nintendont.zip)
-        uses: actions/upload-artifact@v2
-        with:
-          name: nintendont.zip
-          path: nintendont.zip
-
-      - name: Create Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v1.0.${{ github.run_number }}
-          release_name: "Nintendont Release ${{ github.run_number }}"
-          body: "Automatic release with nintendont.zip"
-          draft: false
-          prerelease: false
-          files: nintendont.zip
+    - name: Create Release
+      uses: actions/create-release@v1
+      with:
+        tag_name: 'nintendont-release-${{ github.run_id }}'
+        release_name: 'Nintendont Release'
+        draft: false
+        prerelease: false
+        files: nintendont.zip
