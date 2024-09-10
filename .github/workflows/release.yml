@@ -24,9 +24,22 @@ jobs:
         git fetch upstream
         git checkout master
         git merge upstream/master --allow-unrelated-histories
-        git push origin master
+        
+    - name: Check for changes
+      id: check_changes
+      run: |
+        if [ -n "$(git log HEAD..upstream/master --oneline)" ]; then
+          echo "changes=true" >> $GITHUB_OUTPUT
+        else
+          echo "changes=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Push changes if any
+      if: steps.check_changes.outputs.changes == 'true'
+      run: git push origin master
 
     - name: Copy required files
+      if: steps.check_changes.outputs.changes == 'true'
       run: |
         mkdir -p apps/Nintendont/
         cp loader/loader.dol apps/Nintendont/
@@ -34,9 +47,11 @@ jobs:
         cp nintendont/icon.png apps/Nintendont/
 
     - name: Archive folder into nintendont.zip
+      if: steps.check_changes.outputs.changes == 'true'
       run: zip -r nintendont.zip apps/
 
     - name: Create Release
+      if: steps.check_changes.outputs.changes == 'true'
       uses: softprops/action-gh-release@v1
       with:
         files: nintendont.zip
