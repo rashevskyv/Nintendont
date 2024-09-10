@@ -28,8 +28,7 @@ jobs:
 
     - name: Copy required files
       run: |
-        mkdir -p apps/Nintendont/loader
-        mkdir -p apps/Nintendont/nintendont
+        mkdir -p apps/Nintendont/
         cp loader/loader.dol apps/Nintendont/
         cp nintendont/meta.xml apps/Nintendont/
         cp nintendont/icon.png apps/Nintendont/
