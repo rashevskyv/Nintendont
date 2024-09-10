@@ -1,0 +1,54 @@
+name: Sync Fork, Copy Files and Create Release
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'  # Run every day at midnight
+
+jobs:
+  sync-fork:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Forked Repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Configure Git user
+      run: |
+        git config --local user.email "github-actions@example.com"
+        git config --local user.name "GitHub Actions Bot"
+
+    - name: Add original repo as remote and sync
+      run: |
+        git remote add upstream https://github.com/FIX94/Nintendont.git
+        git fetch upstream
+        git checkout master
+        git merge upstream/master --allow-unrelated-histories
+        git push origin master
+
+    - name: Copy required files
+      run: |
+        mkdir -p apps/Nintendont/
+        cp loader/loader.dol apps/Nintendont/
+        cp nintendont/meta.xml apps/Nintendont/
+        cp nintendont/icon.png apps/Nintendont/
+
+    - name: Archive folder into nintendont.zip
+      run: zip -r nintendont.zip apps/
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: nintendont.zip
+        name: Nintendont Release
+        tag_name: nintendont-release-${{ github.run_id }}
+        body: |
+          This is an automated release of Nintendont.
+          
+          Changes:
+          - Synced with upstream repository
+          - Updated loader.dol, meta.xml, and icon.png
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
