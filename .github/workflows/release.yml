@@ -57,7 +57,7 @@ jobs:
 
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
+      uses: actions/create-release@v1.1.4  # Оновлена версія дії
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         tag_name: 'nintendont-release-${{ github.run_id }}'
