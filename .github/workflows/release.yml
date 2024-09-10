@@ -15,14 +15,19 @@ jobs:
       with:
         repository: ${{ github.repository }}
         token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Clean up any old configurations
+      run: |
+        git remote remove upstream || true  # Видаляємо upstream, якщо він існує
     
     - name: Add original repo as remote
       run: |
         git remote add upstream https://github.com/FIX94/Nintendont.git
         git fetch upstream
-        git checkout master
-        git merge upstream/master
-    
+        git branch -a  # Перевіряємо всі доступні гілки
+        git checkout master  # Перемикаємося на master
+        git merge upstream/master  # Синхронізація з upstream/master
+
     - name: Copy loader.dol
       run: |
         mkdir -p apps/Nintendont/loader
