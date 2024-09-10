@@ -1,74 +1,55 @@
 name: Sync Fork, Copy Files and Create Release
-
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *'  # Запуск кожен день опівночі
+    - cron: '0 0 * * *'  # Run every day at midnight
 
 jobs:
   sync-fork:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout Forked Repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
-        repository: ${{ github.repository }}
-        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
 
     - name: Configure Git user
       run: |
         git config --local user.email "github-actions@example.com"
         git config --local user.name "GitHub Actions Bot"
 
-    - name: Clean up any old configurations
-      run: |
-        git remote remove upstream || true  # Видаляємо upstream, якщо він існує
-    
-    - name: Add original repo as remote
+    - name: Add original repo as remote and sync
       run: |
         git remote add upstream https://github.com/FIX94/Nintendont.git
         git fetch upstream
-        git branch -a  # Перевіряємо всі доступні гілки
-        git checkout master  # Перемикаємося на master
-    
-    - name: Merge upstream/master into fork/master
-      run: |
-        git merge upstream/master --allow-unrelated-histories  # Дозволяємо злиття з різними історіями
+        git checkout master
+        git merge upstream/master --allow-unrelated-histories
+        git push origin master
 
-    - name: Copy loader.dol
+    - name: Copy required files
       run: |
         mkdir -p apps/Nintendont/loader
+        mkdir -p apps/Nintendont/nintendont
         cp loader/loader.dol apps/Nintendont/loader/
-    
-    - name: Copy meta.xml
-      run: |
-        mkdir -p apps/Nintendont/nintendont
         cp nintendont/meta.xml apps/Nintendont/nintendont/
-    
-    - name: Copy icon.png
-      run: |
-        mkdir -p apps/Nintendont/nintendont
         cp nintendont/icon.png apps/Nintendont/nintendont/
 
     - name: Archive folder into nintendont.zip
-      run: |
-        zip -r nintendont.zip apps/
+      run: zip -r nintendont.zip apps/
 
     - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1.1.4  # Оновлена версія дії
+      uses: softprops/action-gh-release@v1
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        tag_name: 'nintendont-release-${{ github.run_id }}'
-        release_name: 'Nintendont Release'
+        files: nintendont.zip
+        name: Nintendont Release
+        tag_name: nintendont-release-${{ github.run_id }}
+        body: |
+          This is an automated release of Nintendont.
+          
+          Changes:
+          - Synced with upstream repository
+          - Updated loader.dol, meta.xml, and icon.png
         draft: false
         prerelease: false
-
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: nintendont.zip
-        asset_name: nintendont.zip
-        asset_content_type: application/zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
