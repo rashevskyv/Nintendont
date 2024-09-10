@@ -26,7 +26,10 @@ jobs:
         git fetch upstream
         git branch -a  # Перевіряємо всі доступні гілки
         git checkout master  # Перемикаємося на master
-        git merge upstream/master  # Синхронізація з upstream/master
+    
+    - name: Merge upstream/master into fork/master
+      run: |
+        git merge upstream/master --allow-unrelated-histories  # Дозволяємо злиття з різними історіями
 
     - name: Copy loader.dol
       run: |
