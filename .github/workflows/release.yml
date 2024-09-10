@@ -1,0 +1,41 @@
+name: Auto Release with Changelog
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  create_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v2
+        
+      - name: Checkout another repo
+        uses: actions/checkout@v2
+        with:
+          repository: another-user/another-repo
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: another-repo
+
+      - name: Set up Git
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+
+      - name: Generate changelog
+        run: |
+          cd another-repo
+          git log --oneline > ../CHANGELOG.md
+        
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          release_name: "Release ${{ github.run_number }}"
+          body_path: ./CHANGELOG.md
+          draft: false
+          prerelease: false
