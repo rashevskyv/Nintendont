@@ -1,4 +1,4 @@
-name: Auto Release with Changelog
+name: Auto Release with Nintendont Files
 
 on:
   push:
@@ -12,30 +12,38 @@ jobs:
       - name: Checkout this repo
         uses: actions/checkout@v2
         
-      - name: Checkout another repo
+      - name: Checkout another repo (Nintendont)
         uses: actions/checkout@v2
         with:
-          repository: another-user/another-repo
+          repository: another-user/nintendont-repo
           token: ${{ secrets.GITHUB_TOKEN }}
-          path: another-repo
+          path: nintendont-repo
 
-      - name: Set up Git
+      - name: Create apps/Nintendont directory
         run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
+          mkdir -p apps/Nintendont
+          cp nintendont-repo/loader/loader.dol apps/Nintendont/
+          cp nintendont-repo/nintendont/meta.xml apps/Nintendont/
+          cp nintendont-repo/nintendont/icon.png apps/Nintendont/
 
-      - name: Generate changelog
+      - name: Archive the apps directory
         run: |
-          cd another-repo
-          git log --oneline > ../CHANGELOG.md
-        
+          zip -r nintendont.zip apps/
+
+      - name: Upload artifact (nintendont.zip)
+        uses: actions/upload-artifact@v2
+        with:
+          name: nintendont.zip
+          path: nintendont.zip
+
       - name: Create Release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: v1.0.${{ github.run_number }}
-          release_name: "Release ${{ github.run_number }}"
-          body_path: ./CHANGELOG.md
+          release_name: "Nintendont Release ${{ github.run_number }}"
+          body: "Automatic release with nintendont.zip"
           draft: false
           prerelease: false
+          files: nintendont.zip
